@@ -15,6 +15,7 @@ library(naniar)
 library(rio)
 ```
 
+This simulated outbreak of Ebola Virus Disease matches some key properties of the West African Ebola outbreak of 2014-2015.
 
 ```{r}
 # import the linelist
@@ -56,8 +57,6 @@ The number of NAs in the dataset by columns.
 ```{r}
 # check the number of NAs in the dataset by columns
 colSums(is.na(linelist))
-# the dimension of the original dataset
-dim(linelist)
 ```
 The proportion of missing values in each variable. 
 
@@ -81,20 +80,6 @@ pct_miss(linelist)
 pct_miss_case(linelist)
 # percent of rows that are complete
 pct_complete_case(linelist)
-```
-
-### Functions to Remove Missing Values
-
-```{r, results='hide'}
-## listwise deletion
-na.omit(linelist)
-## drops rows missing values for any of these columns
-linelist %>%
-  drop_na(case_id, date_onset, age)
-## remove NAs by specifing the input parameters
-mean(linelist$age, na.rm = TRUE)
-## complete cases
-linelist[complete.cases(linelist), ]
 ```
 
 ## Visualize Missingness
@@ -161,10 +146,22 @@ ggplot(data = outcome_missing)+
 
 ## Address Missingness
 
+### Functions to Remove Missing Values
+
+```{r, results='hide'}
+## listwise deletion
+na.omit(linelist)
+linelist[complete.cases(linelist), ]
+## drops rows missing values for any of these columns
+linelist %>%
+  drop_na(case_id, date_onset, age)
+## remove NAs by specifing the input parameters
+mean(linelist$age, na.rm = TRUE)
+```
+
 ### Mean Imputation
 
 ```{r, results='hide'}
-linelist[is.na(linelist$temp),]
 linelist <- linelist %>%
     mutate(temp_replace_na_with_mean = replace_na(temp, mean(temp, na.rm = T)))
 linelist[is.na(linelist$temp),]
@@ -190,6 +187,7 @@ temp_imputed <- mice(model_dataset,
                      # number of multiple imputations, default 5
                      m = 1,
                      print = F)
+temp_imputed$imp$temp
 ```
 
 ### Multiple Imputation
@@ -207,6 +205,7 @@ base::summary(mice::pool(model_fit))
 pool(model_fit)
 plot(multiple_imputation)
 ```
+
 The fraction of information missing due to nonresponse (fmi) and the relative increase in variance due to nonresponse (lambda) are pretty high. 
 
 ```{r}
@@ -219,7 +218,7 @@ attributes(multiple_imputation)
 # imputated dataset
 # multiple_imputation$imp
 # extract a certain imputed dataset
-c3 <- complete(multiple_imputation, 1)
+c3 <- complete(multiple_imputation, 3, include = TRUE)
 ```
 
 
@@ -230,4 +229,11 @@ Explore the following dataset `airquality`
 ```{r, results='hide'}
 airquality
 ```
+
+1. What is the percentage of data missing on all variables?
+
+2. Show the number of missing in each column by month
+
+3. Impute missing values using all variables in dataset. Plot the imputed dataset. 
+
 
